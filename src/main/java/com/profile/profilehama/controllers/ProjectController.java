@@ -32,10 +32,16 @@ public class ProjectController {
                                  @RequestParam("userProfileId") Long userProfileId,
                                  @RequestParam("images") List<MultipartFile> images) {
         try {
-            List<String> imagePaths = new ArrayList<>();
-            for (MultipartFile image : images) {
-                // Enregistrer chaque image et ajouter le chemin à la liste
-                imagePaths.add(fileStorageService.saveFile(image));
+            List<String> mediaPaths = new ArrayList<>();
+            for (MultipartFile media : images) {
+                // Vérifier le type de fichier
+                String fileType = media.getContentType();
+                if (!fileType.startsWith("image/") && !fileType.startsWith("video/")) {
+                    throw new IllegalArgumentException("Type de fichier non pris en charge: " + media.getOriginalFilename());
+                }
+
+                // Enregistrer chaque image/vidéo et ajouter le chemin à la liste
+                mediaPaths.add(fileStorageService.saveFile(media));
             }
 
             UserProfile userProfile = userProfileService.getUserProfileById(userProfileId);
@@ -46,7 +52,7 @@ public class ProjectController {
             Project project = new Project();
             project.setProjectName(projectName);
             project.setDescription(description);
-            project.setProjectImagePaths(imagePaths);
+            project.setProjectImagePaths(mediaPaths); // Renommez la méthode si nécessaire
             project.setUserProfile(userProfile);
 
             return projectService.createProject(project);
@@ -68,11 +74,17 @@ public class ProjectController {
             project.setDescription(description);
 
             if (images != null) {
-                List<String> imagePaths = new ArrayList<>();
-                for (MultipartFile image : images) {
-                    imagePaths.add(fileStorageService.saveFile(image));
+                List<String> mediaPaths = new ArrayList<>();
+                for (MultipartFile media : images) {
+                    // Vérifier le type de fichier
+                    String fileType = media.getContentType();
+                    if (!fileType.startsWith("image/") && !fileType.startsWith("video/")) {
+                        throw new IllegalArgumentException("Type de fichier non pris en charge: " + media.getOriginalFilename());
+                    }
+
+                    mediaPaths.add(fileStorageService.saveFile(media));
                 }
-                project.setProjectImagePaths(imagePaths);
+                project.setProjectImagePaths(mediaPaths); // Renommez en conséquence
             }
 
             if (userProfileId != null) {
@@ -90,10 +102,12 @@ public class ProjectController {
     public List<Project> getAllProjects() {
         return projectService.getAllProjects();
     }
+
     @GetMapping("/user/{userProfileId}")
     public List<Project> getProjectsByUserProfileId(@PathVariable Long userProfileId) {
         return projectService.getProjectsByUserProfileId(userProfileId);
     }
+
     @GetMapping("/{id}")
     public Project getProjectById(@PathVariable Long id) {
         return projectService.getProjectById(id);
