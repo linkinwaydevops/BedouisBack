@@ -57,25 +57,49 @@ public class UserProfileController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateUserProfile(@RequestParam("id") Long id, @RequestBody UserProfile updatedProfile) {
+    public ResponseEntity<?> updateUserProfile(
+            @RequestParam("id") Long id,
+            @RequestParam("name") String name,
+            @RequestParam("lastName") String lastName,
+            @RequestParam("email") String email,
+            @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
+            @RequestParam("aboutMe") String aboutMe,
+            @RequestParam("mobile") String mobile,
+            @RequestParam("location") String location,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
+
+        // Récupération du profil existant
         UserProfile existingProfile = userProfileService.getUserProfileById(id);
         if (existingProfile == null) {
             return ResponseEntity.badRequest().body("User not found");
         }
 
-        // Mise à jour des informations
-        existingProfile.setName(updatedProfile.getName());
-        existingProfile.setLastName(updatedProfile.getLastName());
-        existingProfile.setEmail(updatedProfile.getEmail());
-        existingProfile.setDateOfBirth(updatedProfile.getDateOfBirth());
-        existingProfile.setAboutMe(updatedProfile.getAboutMe());
-        existingProfile.setMobile(updatedProfile.getMobile());
-        existingProfile.setLocation(updatedProfile.getLocation());
-        existingProfile.setProfileImagePath(updatedProfile.getProfileImagePath());
-        existingProfile.setCategory(updatedProfile.getCategory());
+        try {
+            // Si une nouvelle image est fournie, la traiter et mettre à jour le chemin
+            if (image != null && !image.isEmpty()) {
+                String imagePath = fileStorageService.saveFile(image);
+                existingProfile.setProfileImagePath(imagePath); // Mettre à jour le chemin de l'image
+            }
 
-        userProfileService.updateUserProfile(existingProfile);
-        return ResponseEntity.ok(Collections.singletonMap("message", "Profile updated successfully"));
+            // Mise à jour des autres informations
+            existingProfile.setName(name);
+            existingProfile.setLastName(lastName);
+            existingProfile.setEmail(email);
+            existingProfile.setDateOfBirth(dateOfBirth);
+            existingProfile.setAboutMe(aboutMe);
+            existingProfile.setMobile(mobile);
+            existingProfile.setLocation(location);
+
+            // Mise à jour dans la base de données
+            userProfileService.updateUserProfile(existingProfile);
+
+            return ResponseEntity.ok(Collections.singletonMap("message", "Profile updated successfully"));
+
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body("Failed to store file: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("An unexpected error occurred: " + e.getMessage());
+        }
     }
     @GetMapping
     public List<UserProfile> getAllUserProfiles() {
