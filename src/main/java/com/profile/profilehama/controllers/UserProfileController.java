@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/user-profiles")
-@CrossOrigin(origins = {"http://bedouinsstudios.com", "*"})
+@CrossOrigin(origins = {"https://bedouinsstudios.com", "*"})
 
 public class UserProfileController {
 
