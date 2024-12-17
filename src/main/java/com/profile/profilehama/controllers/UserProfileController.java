@@ -59,13 +59,13 @@ public class UserProfileController {
     @PutMapping
     public ResponseEntity<?> updateUserProfile(
             @RequestParam("id") Long id,
-            @RequestParam("name") String name,
-            @RequestParam("lastName") String lastName,
-            @RequestParam("email") String email,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "lastName", required = false) String lastName,
+            @RequestParam(value = "email", required = false) String email,
             @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
-            @RequestParam("aboutMe") String aboutMe,
-            @RequestParam("mobile") String mobile,
-            @RequestParam("location") String location,
+            @RequestParam(value = "aboutMe", required = false) String aboutMe,
+            @RequestParam(value = "mobile", required = false) String mobile,
+            @RequestParam(value = "location", required = false) String location,
             @RequestParam(value = "image", required = false) MultipartFile image) {
 
         // Récupération du profil existant
@@ -81,14 +81,28 @@ public class UserProfileController {
                 existingProfile.setProfileImagePath(imagePath); // Mettre à jour le chemin de l'image
             }
 
-            // Mise à jour des autres informations
-            existingProfile.setName(name);
-            existingProfile.setLastName(lastName);
-            existingProfile.setEmail(email);
-            existingProfile.setDateOfBirth(dateOfBirth);
-            existingProfile.setAboutMe(aboutMe);
-            existingProfile.setMobile(mobile);
-            existingProfile.setLocation(location);
+            // Mise à jour des autres informations, en conservant la valeur précédente si nécessaire
+            if (name != null) {
+                existingProfile.setName(name);
+            }
+            if (lastName != null) {
+                existingProfile.setLastName(lastName);
+            }
+            if (email != null) {
+                existingProfile.setEmail(email);
+            }
+            if (dateOfBirth != null) {
+                existingProfile.setDateOfBirth(dateOfBirth);
+            }
+            if (aboutMe != null) {
+                existingProfile.setAboutMe(aboutMe);
+            }
+            if (mobile != null) {
+                existingProfile.setMobile(mobile);
+            }
+            if (location != null) {
+                existingProfile.setLocation(location);
+            }
 
             // Mise à jour dans la base de données
             userProfileService.updateUserProfile(existingProfile);
